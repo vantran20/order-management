@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  pg:
+    ports:
+      - "5432:5432"
+  pg-migrate:
+    volumes:
+      - ../api/data/migrations:/api-migrations
+  api:
+    image: ${PROJECT_NAME}-go-local:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../api:/api:cached
+      - api-build-cache:/root/.cache/go-build
+  mockery:
+    volumes:
+      - ../api:/api:cached
+      - api-build-cache:/root/.cache/go-build
+volumes:
+  api-build-cache:
+    name: ${PROJECT_NAME}-api-build-cache

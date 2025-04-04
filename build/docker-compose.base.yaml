@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  pg:
+    container_name: ${PROJECT_NAME}-db-${CONTAINER_SUFFIX:-local}
+    image: postgres:15-alpine
+    restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    networks:
+      - network
+    environment:
+      TZ: UTC
+      POSTGRES_USER: ${PROJECT_NAME}
+      POSTGRES_HOST_AUTH_METHOD: trust
+  pg-migrate:
+    container_name: ${PROJECT_NAME}-pg-migrate-${CONTAINER_SUFFIX:-local}
+    image: migrate/migrate:v4.18.1
+    restart: "no"
+    entrypoint: ""
+    networks:
+      - network
+    environment:
+      TZ: UTC
+      PG_URL: postgres://@pg:5432/${PROJECT_NAME}?sslmode=disable
+      PGUSER: ${PROJECT_NAME}
+      PGPASSWORD: ""
+  mockery:
+    container_name: ${PROJECT_NAME}-mockery-${CONTAINER_SUFFIX:-local}
+    image: vektra/mockery:v2.45.1
+  api:
+    container_name: ${PROJECT_NAME}-api-${CONTAINER_SUFFIX:-local}
+    networks:
+      - network
+    environment:
+      TZ: UTC
+      CGO_ENABLED: 0
+      GOARCH: amd64
+      GOOS: linux
+      PORT: '3000'
+      APP_NAME: '${PROJECT_NAME}-api'
+      APP_ENV: 'test'
+      PROJECT_NAME: ${PROJECT_NAME}
+      PROJECT_COMPONENT: 'api'
+      PROJECT_TEAM: 'gds'
+      APP_VERSION: 'local'
+      SERVER_NAME: 'docker-local'
+      CORS_ALLOWED_ORIGINS: '*'
+      AUTH_SECRET_KEY: 'your-secret-key'
+      DB_URL: postgres://${PROJECT_NAME}:@pg:5432/${PROJECT_NAME}?sslmode=disable
+      DB_POOL_MAX_OPEN_CONNS: '4'
+      DB_POOL_MAX_IDLE_CONNS: '2'
+      DB_DEBUG_LOGGING_ENABLED: 'true'
+      GQL_INTROSPECTION_ENABLED: 'true'
+
+networks:
+  network:
+    name: ${PROJECT_NAME}-${CONTAINER_SUFFIX:-local}
