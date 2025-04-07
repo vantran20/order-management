@@ -1,75 +1,105 @@
-# 🧾 Order Management System
+🧾 Order Management System
 
-Hệ thống quản lý đơn hàng (Order Management) được xây dựng theo kiến trúc **Clean Architecture**, sử dụng **Golang**, **Gin framework**, **WebSocket** cho real-time notification, và được container hóa bằng **Docker** để dễ dàng triển khai trên nhiều môi trường.
+The Order Management System is built using Clean Architecture, developed in Golang with the Gin framework, supports WebSocket for real-time notifications, and is containerized using Docker for easy deployment across environments.
 
-## 🚀 Tính năng chính
+🚀 Key Features
 
-### ✅ Authentication
-- Đăng ký người dùng (Register)
-- Đăng nhập (Login) và xác thực qua middleware
-- Cập nhật / xóa người dùng
+✅ Authentication
 
-### 📦 Product Management
-- Tạo, cập nhật, xóa sản phẩm
-- Quản lý tồn kho
+•	User registration
 
-### 🛒 Order Management
-- Tạo đơn hàng và validate sản phẩm tồn kho
-- Tự động cập nhật tổng tiền đơn hàng
-- Cập nhật trạng thái đơn hàng
+•	Login with middleware-based authentication
 
-### 🔔 Real-time Notification
-- WebSocket hỗ trợ gửi thông báo **realtime** tới client khi đơn hàng được tạo hoặc cập nhật trạng thái
+•	Update / delete user
 
----
+📦 Product Management
 
-## 🧑‍💻 Cài đặt & chạy project
+•	Create, update, delete products
 
-### Yêu cầu
-- Docker + Docker Compose
-- Make
-
-### Cài đặt nhanh:
-
-```bash
-# Clone dự án
-git clone https://github.com/vantran20/order-management.git
-cd order-management
-
-# Khởi động local environment [Pull Docker Image + Setup local]
-make setup
-# Generate ORM
-make boilerplate
-# Build ứng dụng
-make run
-
-Các lệnh hữu ích:
-•	maek api-update-vendor: 	Download các thư việc và dọn dẹp các thư viện không dùng đến
-•	make teardown:	                Dừng container
-•	make api-pg-migrate:    	Chạy migration
-•	make test:              	Chạy test
+•	Manage inventory
 
 
+🛒 Order Management
+
+•	Create orders with inventory validation
+
+•	Automatically calculate total order cost
+
+•	Update order status
+
+
+🔔 Real-time Notification
+
+•	WebSocket support for real-time notifications when an order is created or its status changes
 
 ⸻
 
-📡 API Endpoint
+🧑‍💻 Setup & Run Project
 
-Public APIs
-	•	POST   /public/users/register – Đăng ký người dùng
-	•	POST   /public/users/login – Đăng nhập
+Requirements
 
-Authenticated APIs (require token)
-	•	GET    /authenticated/users/profile – Lấy thông tin user
-	•	GET    /authenticated/users/:id – Lấy thông tin user by ID
-	•	GET    /authenticated/users/list - Lấy thông tin users
-	•	POST   /authenticated/products/create – Tạo product
-	•	POST   /authenticated/products/update – Cập nhập product
-	•	POST   /authenticated/products/delete  – Soft delete product
-	•	GET    /authenticated/products/:id  – Lấy thông tin product bằng id
-	•	GET    /authenticated/products/list   – Lấy thông tin tất cả products
-	•	POST   /authenticated/order/create   – Tạo đơn hàng
-	•	POST   /authenticated/order/update/:id   – Cập nhập đơn hàng
+•	Docker + Docker Compose
 
-WebSocket
-	•	ws://localhost:3000/authenticated/order/ws – Lắng nghe thông báo trạng thái đơn hàng
+•	Make CMD
+
+
+# Quick Setup:
+
+## Clone the project
+1. `git clone https://github.com/vantran20/order-management.git`
+
+2. `cd order-management`
+
+## Start local environment [Pull Docker Image + Setup local]
+`make setup`
+## Generate ORM
+`make boilerplate`
+## Build and run the app
+`make run`
+
+Useful commands:
+
+•	`make api-update-vendor`:   Download and clean up unused dependencies
+
+•	`make teardown`:            Stop containers
+
+•	`make api-pg-migrate`:      Run database migrations
+
+•	`make test`:                Run tests
+
+⸻
+
+📡 API Endpoints
+
+
+## Public APIs:
+
+•	POST   /public/users/register – Register user
+
+•	POST   /public/users/login – Login
+
+## Authenticated APIs (require token):
+
+•	GET    /authenticated/users/profile – Get user profile
+
+•	GET    /authenticated/users/:id – Get user by ID
+
+•	GET    /authenticated/users/list – Get user list
+
+•	POST   /authenticated/products/create – Create product
+
+•	POST   /authenticated/products/update – Update product
+
+•	POST   /authenticated/products/delete – Soft delete product
+
+•	GET    /authenticated/products/:id – Get product by ID
+
+•	GET    /authenticated/products/list – Get all products
+
+•	POST   /authenticated/order/create – Create order
+
+•	POST   /authenticated/order/update/:id – Update order
+
+
+## WebSocket:
+•	ws://localhost:3000/authenticated/order/ws – Listen to order status updates in real time
