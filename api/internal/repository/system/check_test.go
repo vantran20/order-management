@@ -4,10 +4,11 @@ import (
 	"context"
 	"testing"
 
-	pkgerrors "github.com/pkg/errors"
-	"github.com/stretchr/testify/require"
 	"omg/api/pkg/db/pg"
 	"omg/api/pkg/testutil"
+
+	pkgerrors "github.com/pkg/errors"
+	"github.com/stretchr/testify/require"
 )
 
 func TestImpl_CheckDB(t *testing.T) {
