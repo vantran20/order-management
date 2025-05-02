@@ -6,9 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	"omg/api/pkg/db/pg"
 	"omg/api/pkg/env"
+
+	"github.com/stretchr/testify/require"
 )
 
 // appDB caches a pg connection for reuse

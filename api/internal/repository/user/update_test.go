@@ -13,15 +13,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_impl_GetByEmail(t *testing.T) {
+func Test_impl_Update(t *testing.T) {
 	cancelledCtx, c := context.WithCancel(context.Background())
 	c()
 
 	type arg struct {
 		testDataPath string
 		givenCtx     context.Context
-		givenEmail   string
-		expUser      model.User
+		givenUser    model.User
 		mockIDErr    error
 		expErr       error
 	}
@@ -30,22 +29,35 @@ func Test_impl_GetByEmail(t *testing.T) {
 		"success": {
 			testDataPath: "testdata/success_get_user.sql",
 			givenCtx:     context.Background(),
-			givenEmail:   "test@example.com",
-			expUser: model.User{
-				Name:   "Test User",
-				Email:  "test@example.com",
-				Status: model.UserStatusActive,
+			givenUser: model.User{
+				ID:       14753001,
+				Name:     "Test User1",
+				Email:    "test@example.com",
+				Password: "password123",
+				Status:   model.UserStatusActive,
 			},
 		},
 		"ctx_cancelled": {
-			givenCtx:   cancelledCtx,
-			givenEmail: "test@example.com",
-			expErr:     context.Canceled,
+			givenCtx: cancelledCtx,
+			givenUser: model.User{
+				Name:     "Test User",
+				Email:    "test@example.com",
+				Password: "password123",
+				Status:   model.UserStatusActive,
+			},
+			expErr: context.Canceled,
 		},
-		"user_not_found": {
-			givenCtx:   context.Background(),
-			givenEmail: "abc@example.com",
-			expErr:     ErrNotFound,
+		"not_found": {
+			testDataPath: "testdata/success_get_user.sql",
+			givenCtx:     context.Background(),
+			givenUser: model.User{
+				ID:       14753012,
+				Name:     "Test User1",
+				Email:    "test@example.com",
+				Password: "password123",
+				Status:   model.UserStatusActive,
+			},
+			expErr: ErrNotFound,
 		},
 	}
 	for desc, tc := range tcs {
@@ -60,7 +72,7 @@ func Test_impl_GetByEmail(t *testing.T) {
 				require.Nil(t, generator.InitSnowflakeGenerators())
 
 				// When:
-				user, err := repo.GetByEmail(tc.givenCtx, tc.givenEmail)
+				err := repo.Update(tc.givenCtx, tc.givenUser)
 
 				// Then:
 				if tc.expErr != nil {
@@ -72,8 +84,10 @@ func Test_impl_GetByEmail(t *testing.T) {
 					}
 				} else {
 					require.NoError(t, err)
-					require.NotEmpty(t, user.ID)
-					testutil.Compare(t, tc.expUser, user, model.User{}, "ID", "Password", "CreatedAt", "UpdatedAt")
+
+					updatedUser, er := repo.GetByID(tc.givenCtx, tc.givenUser.ID)
+					require.NoError(t, er)
+					testutil.Compare(t, tc.givenUser, updatedUser, model.User{}, "ID", "CreatedAt", "UpdatedAt")
 				}
 			})
 		})

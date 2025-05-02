@@ -7,10 +7,6 @@ const (
 	EnvQA = Env("qa")
 	// EnvDev means dev env
 	EnvDev = Env("dev")
-	// EnvTest means test env
-	EnvTest = Env("test")
-	// EnvLocal means local env
-	EnvLocal = Env("local")
 )
 
 // Env denotes the environment
@@ -19,7 +15,7 @@ type Env string
 // Valid checks if the env is valid or not
 func (e Env) Valid() bool {
 	switch e {
-	case EnvProd, EnvQA, EnvDev, EnvTest, EnvLocal:
+	case EnvProd, EnvQA, EnvDev:
 		return true
 	default:
 		return false

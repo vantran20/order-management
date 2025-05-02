@@ -14,11 +14,11 @@ type Repository interface {
 	UpdateProduct(context.Context, model.Product) (model.Product, error)
 	GetProductByName(context.Context, string) (model.Product, error)
 	GetProductByID(context.Context, int64) (model.Product, error)
-	GetActiveProductsCountFromDB(ctx context.Context) (int64, error)
 
 	CreateOrder(context.Context, model.Order) (model.Order, error)
 	CreateOrderItem(context.Context, model.OrderItem) (model.OrderItem, error)
 	UpdateOrder(context.Context, model.Order) (model.Order, error)
+	UpdateOrderItem(context.Context, model.OrderItem) (model.OrderItem, error)
 	GetOrderByID(context.Context, int64) (model.Order, error)
 }
 

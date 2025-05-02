@@ -12,7 +12,7 @@ import (
 	orderRestHandler "omg/api/internal/handler/rest/orders"
 	productRestHandler "omg/api/internal/handler/rest/products"
 	userRestHandler "omg/api/internal/handler/rest/users"
-	"omg/api/internal/handler/ws"
+	ws2 "omg/api/internal/ws"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,7 +27,7 @@ func New(
 	userCtrl users.Controller,
 	orderCtrl orders.Controller,
 	authService authenticate.AuthService,
-	hub *ws.Hub,
+	hub ws2.Hub,
 ) Router {
 	return Router{
 		ctx:                     ctx,
@@ -44,6 +44,6 @@ func New(
 		authenticateRestHandler: authenticateRestHandler.New(authService),
 		engine:                  gin.Default(),
 		hub:                     hub,
-		wsHandler:               *ws.NewWebSocketHandler(hub, authService),
+		wsHandler:               *ws2.NewWebSocketHandler(hub, authService),
 	}
 }

@@ -20,8 +20,7 @@ func Test_impl_GetUsers(t *testing.T) {
 	type arg struct {
 		testDataPath string
 		givenCtx     context.Context
-		givenID      int64
-		expUser      model.User
+		expUser      []model.User
 		mockIDErr    error
 		expErr       error
 	}
@@ -30,22 +29,26 @@ func Test_impl_GetUsers(t *testing.T) {
 		"success": {
 			testDataPath: "testdata/success_get_user.sql",
 			givenCtx:     context.Background(),
-			givenID:      14753001,
-			expUser: model.User{
-				Name:   "Test User",
-				Email:  "test@example.com",
-				Status: model.UserStatusActive,
+			expUser: []model.User{
+				{
+					Name:   "Test User",
+					Email:  "test@example.com",
+					Status: model.UserStatusActive,
+				},
+				{
+					Name:   "Test User2",
+					Email:  "test2@example.com",
+					Status: model.UserStatusActive,
+				},
 			},
 		},
 		"ctx_cancelled": {
 			givenCtx: cancelledCtx,
-			givenID:  14753001,
 			expErr:   context.Canceled,
 		},
-		"user_not_found": {
+		"empty_list": {
 			givenCtx: context.Background(),
-			givenID:  147530012,
-			expErr:   ErrNotFound,
+			expUser:  nil,
 		},
 	}
 	for desc, tc := range tcs {
@@ -60,7 +63,7 @@ func Test_impl_GetUsers(t *testing.T) {
 				require.Nil(t, generator.InitSnowflakeGenerators())
 
 				// When:
-				user, err := repo.GetByID(tc.givenCtx, tc.givenID)
+				users, err := repo.GetUsers(tc.givenCtx)
 
 				// Then:
 				if tc.expErr != nil {
@@ -70,11 +73,9 @@ func Test_impl_GetUsers(t *testing.T) {
 					} else {
 						require.Equal(t, tc.expErr, pkgerrors.Cause(err))
 					}
-					//require.Equal(t, model.User{}, createdUser)
 				} else {
 					require.NoError(t, err)
-					require.NotEmpty(t, user.ID)
-					testutil.Compare(t, tc.expUser, user, model.User{}, "ID", "Password", "CreatedAt", "UpdatedAt")
+					testutil.Compare(t, tc.expUser, users, model.User{}, "ID", "Password", "CreatedAt", "UpdatedAt")
 				}
 			})
 		})

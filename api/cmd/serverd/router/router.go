@@ -13,7 +13,7 @@ import (
 	orderRestHandler "omg/api/internal/handler/rest/orders"
 	productRestHandler "omg/api/internal/handler/rest/products"
 	userRestHandler "omg/api/internal/handler/rest/users"
-	"omg/api/internal/handler/ws"
+	"omg/api/internal/ws"
 
 	"github.com/gin-gonic/gin"
 )
@@ -36,7 +36,7 @@ type Router struct {
 	authenticateRestHandler authenticateRestHandler.Handler
 	engine                  *gin.Engine
 	wsHandler               ws.WebSocketHandler
-	hub                     *ws.Hub
+	hub                     ws.Hub
 }
 
 // Handler returns the Handler for use by the server
@@ -82,17 +82,18 @@ func (rtr *Router) authenticated(rg *gin.RouterGroup) {
 	usersRouter.GET("/profile", rtr.userRestHandler.GetUserByEmail)
 	usersRouter.GET("/:id", rtr.userRestHandler.GetUserByID)
 	usersRouter.GET("/list", rtr.userRestHandler.List)
-	usersRouter.POST("/update", rtr.userRestHandler.UpdateUser)
+	usersRouter.PUT("/update", rtr.userRestHandler.UpdateUser)
+	usersRouter.POST("/delete/:id", rtr.userRestHandler.Delete)
 
 	productsRouter := rg.Group("/products")
 	productsRouter.POST("/create", rtr.productRestHandler.Create)
-	productsRouter.POST("/update", rtr.productRestHandler.UpdateProduct)
-	productsRouter.POST("/delete", rtr.productRestHandler.Delete)
+	productsRouter.PUT("/update", rtr.productRestHandler.UpdateProduct)
+	productsRouter.POST("/delete/:id", rtr.productRestHandler.Delete)
 	productsRouter.GET("/:id", rtr.productRestHandler.GetProductByID)
 	productsRouter.GET("/list", rtr.productRestHandler.List)
 
 	orderRouter := rg.Group("/order")
 	orderRouter.POST("/create", rtr.orderRestHandler.Create)
-	orderRouter.POST("/update/:id", rtr.orderRestHandler.UpdateProduct)
+	orderRouter.PUT("/update/:id", rtr.orderRestHandler.UpdateProduct)
 	orderRouter.GET("/ws", rtr.wsHandler.HandleOrderUpdates)
 }

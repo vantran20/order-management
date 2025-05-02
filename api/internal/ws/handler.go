@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"strings"
 
-	"omg/api/internal/authenticate"
-
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
@@ -19,18 +17,6 @@ var upgrader = websocket.Upgrader{
 		return true
 	},
 	Subprotocols: []string{""},
-}
-
-type WebSocketHandler struct {
-	hub         *Hub
-	authService authenticate.AuthService
-}
-
-func NewWebSocketHandler(hub *Hub, authService authenticate.AuthService) *WebSocketHandler {
-	return &WebSocketHandler{
-		hub:         hub,
-		authService: authService,
-	}
 }
 
 func (h *WebSocketHandler) Handle(c *gin.Context) {
@@ -86,7 +72,7 @@ func (h *WebSocketHandler) handleWebSocket(c *gin.Context, userID int64) error {
 
 	// Create and register client
 	client := NewClientWithUserID(h.hub, conn, userID)
-	h.hub.register <- client
+	h.hub.Register(client)
 
 	// Start message pumps
 	go client.writePump()

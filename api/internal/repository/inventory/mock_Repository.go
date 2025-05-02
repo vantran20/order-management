@@ -98,34 +98,6 @@ func (_m *MockRepository) CreateProduct(_a0 context.Context, _a1 model.Product) 
 	return r0, r1
 }
 
-// GetActiveProductsCountFromDB provides a mock function with given fields: ctx
-func (_m *MockRepository) GetActiveProductsCountFromDB(ctx context.Context) (int64, error) {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetActiveProductsCountFromDB")
-	}
-
-	var r0 int64
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) (int64, error)); ok {
-		return rf(ctx)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context) int64); ok {
-		r0 = rf(ctx)
-	} else {
-		r0 = ret.Get(0).(int64)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // GetOrderByID provides a mock function with given fields: _a0, _a1
 func (_m *MockRepository) GetOrderByID(_a0 context.Context, _a1 int64) (model.Order, error) {
 	ret := _m.Called(_a0, _a1)
@@ -260,6 +232,34 @@ func (_m *MockRepository) UpdateOrder(_a0 context.Context, _a1 model.Order) (mod
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, model.Order) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateOrderItem provides a mock function with given fields: _a0, _a1
+func (_m *MockRepository) UpdateOrderItem(_a0 context.Context, _a1 model.OrderItem) (model.OrderItem, error) {
+	ret := _m.Called(_a0, _a1)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateOrderItem")
+	}
+
+	var r0 model.OrderItem
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, model.OrderItem) (model.OrderItem, error)); ok {
+		return rf(_a0, _a1)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, model.OrderItem) model.OrderItem); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		r0 = ret.Get(0).(model.OrderItem)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, model.OrderItem) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)

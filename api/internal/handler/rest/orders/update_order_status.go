@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	"omg/api/internal/controller/orders"
-	"omg/api/internal/handler/ws"
 	"omg/api/internal/model"
+	"omg/api/internal/ws"
 
 	"github.com/gin-gonic/gin"
 )
@@ -50,7 +50,7 @@ func (h *Handler) UpdateProduct(c *gin.Context) {
 	// Broadcast order status update via WebSocket
 	msg := ws.NewOrderStatusMessage(order.ID, order.UserID, order.Status.String(), order.TotalCost)
 	if msgBytes, err := msg.ToJSON(); err == nil {
-		h.wsHub.Broadcast <- msgBytes
+		h.wsHub.BroadcastMessage(msgBytes)
 	}
 
 	c.JSON(http.StatusCreated, "Successfully updated order status")

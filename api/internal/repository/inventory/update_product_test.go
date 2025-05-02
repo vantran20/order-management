@@ -1,4 +1,4 @@
-package user
+package inventory
 
 import (
 	"context"
@@ -13,39 +13,55 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_impl_GetByEmail(t *testing.T) {
+func Test_impl_UpdateProduct(t *testing.T) {
 	cancelledCtx, c := context.WithCancel(context.Background())
 	c()
 
 	type arg struct {
 		testDataPath string
 		givenCtx     context.Context
-		givenEmail   string
-		expUser      model.User
+		givenProduct model.Product
 		mockIDErr    error
 		expErr       error
 	}
 
 	tcs := map[string]arg{
 		"success": {
-			testDataPath: "testdata/success_get_user.sql",
+			testDataPath: "testdata/success_get_data.sql",
 			givenCtx:     context.Background(),
-			givenEmail:   "test@example.com",
-			expUser: model.User{
-				Name:   "Test User",
-				Email:  "test@example.com",
-				Status: model.UserStatusActive,
+			givenProduct: model.Product{
+				ID:          14753010,
+				Name:        "Test Product",
+				Description: "test",
+				Status:      model.ProductStatusActive,
+				Price:       3000,
+				Stock:       200,
 			},
 		},
 		"ctx_cancelled": {
-			givenCtx:   cancelledCtx,
-			givenEmail: "test@example.com",
-			expErr:     context.Canceled,
+			givenCtx: cancelledCtx,
+			givenProduct: model.Product{
+				ID:          14753010,
+				Name:        "Test Product",
+				Description: "test",
+				Status:      model.ProductStatusActive,
+				Price:       3000,
+				Stock:       200,
+			},
+			expErr: context.Canceled,
 		},
-		"user_not_found": {
-			givenCtx:   context.Background(),
-			givenEmail: "abc@example.com",
-			expErr:     ErrNotFound,
+		"not_found": {
+			testDataPath: "testdata/success_get_data.sql",
+			givenCtx:     context.Background(),
+			givenProduct: model.Product{
+				ID:          14753012,
+				Name:        "Test Product",
+				Description: "test",
+				Status:      model.ProductStatusActive,
+				Price:       3000,
+				Stock:       200,
+			},
+			expErr: ErrProductNotFound,
 		},
 	}
 	for desc, tc := range tcs {
@@ -60,7 +76,7 @@ func Test_impl_GetByEmail(t *testing.T) {
 				require.Nil(t, generator.InitSnowflakeGenerators())
 
 				// When:
-				user, err := repo.GetByEmail(tc.givenCtx, tc.givenEmail)
+				productUpdated, err := repo.UpdateProduct(tc.givenCtx, tc.givenProduct)
 
 				// Then:
 				if tc.expErr != nil {
@@ -72,8 +88,8 @@ func Test_impl_GetByEmail(t *testing.T) {
 					}
 				} else {
 					require.NoError(t, err)
-					require.NotEmpty(t, user.ID)
-					testutil.Compare(t, tc.expUser, user, model.User{}, "ID", "Password", "CreatedAt", "UpdatedAt")
+
+					testutil.Compare(t, tc.givenProduct, productUpdated, model.Product{}, "CreatedAt", "UpdatedAt")
 				}
 			})
 		})

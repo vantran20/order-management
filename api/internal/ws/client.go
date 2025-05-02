@@ -15,13 +15,13 @@ const (
 )
 
 type Client struct {
-	hub    *Hub
+	hub    Hub
 	conn   *websocket.Conn
 	send   chan []byte
 	userID int64
 }
 
-func NewClientWithUserID(hub *Hub, conn *websocket.Conn, userID int64) *Client {
+func NewClientWithUserID(hub Hub, conn *websocket.Conn, userID int64) *Client {
 	return &Client{
 		hub:    hub,
 		conn:   conn,
@@ -32,7 +32,7 @@ func NewClientWithUserID(hub *Hub, conn *websocket.Conn, userID int64) *Client {
 
 func (c *Client) readPump() {
 	defer func() {
-		c.hub.unregister <- c
+		c.hub.Unregister(c)
 		c.conn.Close()
 	}()
 
@@ -51,7 +51,7 @@ func (c *Client) readPump() {
 			}
 			break
 		}
-		c.hub.Broadcast <- message
+		c.hub.BroadcastMessage(message)
 	}
 }
 

@@ -1,10 +1,7 @@
 package users
 
 import (
-	"errors"
 	"net/http"
-
-	"omg/api/internal/controller/users"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,8 +17,6 @@ func (h *Handler) List(c *gin.Context) {
 	list, err := h.controller.GetUsers(c.Request.Context())
 	if err != nil {
 		switch {
-		case errors.Is(err, users.ErrUserNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		}

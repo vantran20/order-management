@@ -31,17 +31,17 @@ func (h *Handler) Register(c *gin.Context) {
 		return
 	}
 
-	input := model.CreateUserInput{
-		Name:     req.Name,
-		Email:    req.Email,
-		Password: req.Password,
+	input, err := validateAndMapRegisterRequest(req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	user, err := h.controller.Create(c.Request.Context(), input)
 	if err != nil {
 		switch {
 		case errors.Is(err, users.ErrUserAlreadyExists):
-			c.JSON(http.StatusConflict, gin.H{"error": "user already exists"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "user already exists"})
 		case errors.Is(err, users.ErrHashedPassword):
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to hash password"})
 		default:
@@ -56,4 +56,24 @@ func (h *Handler) Register(c *gin.Context) {
 		Email:  user.Email,
 		Status: user.Status.String(),
 	})
+}
+
+func validateAndMapRegisterRequest(req registerRequest) (model.CreateUserInput, error) {
+	if req.Name == "" {
+		return model.CreateUserInput{}, errors.New("user name is required")
+	}
+
+	if req.Email == "" {
+		return model.CreateUserInput{}, errors.New("user email is required")
+	}
+
+	if req.Password == "" {
+		return model.CreateUserInput{}, errors.New("user password is required")
+	}
+
+	return model.CreateUserInput{
+		Name:     req.Name,
+		Email:    req.Email,
+		Password: req.Password,
+	}, nil
 }

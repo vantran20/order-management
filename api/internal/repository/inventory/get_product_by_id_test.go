@@ -1,4 +1,4 @@
-package user
+package inventory
 
 import (
 	"context"
@@ -13,39 +13,42 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_impl_GetByEmail(t *testing.T) {
+func Test_impl_GetProductByID(t *testing.T) {
 	cancelledCtx, c := context.WithCancel(context.Background())
 	c()
 
 	type arg struct {
 		testDataPath string
 		givenCtx     context.Context
-		givenEmail   string
-		expUser      model.User
+		givenID      int64
+		expProduct   model.Product
 		mockIDErr    error
 		expErr       error
 	}
 
 	tcs := map[string]arg{
 		"success": {
-			testDataPath: "testdata/success_get_user.sql",
+			testDataPath: "testdata/success_get_data.sql",
 			givenCtx:     context.Background(),
-			givenEmail:   "test@example.com",
-			expUser: model.User{
-				Name:   "Test User",
-				Email:  "test@example.com",
-				Status: model.UserStatusActive,
+			givenID:      14753010,
+			expProduct: model.Product{
+				ID:          14753010,
+				Name:        "Test Product",
+				Description: "test",
+				Status:      model.ProductStatusActive,
+				Price:       2000,
+				Stock:       100,
 			},
 		},
 		"ctx_cancelled": {
-			givenCtx:   cancelledCtx,
-			givenEmail: "test@example.com",
-			expErr:     context.Canceled,
+			givenCtx: cancelledCtx,
+			givenID:  14753001,
+			expErr:   context.Canceled,
 		},
-		"user_not_found": {
-			givenCtx:   context.Background(),
-			givenEmail: "abc@example.com",
-			expErr:     ErrNotFound,
+		"product_not_found": {
+			givenCtx: context.Background(),
+			givenID:  147530012,
+			expErr:   ErrProductNotFound,
 		},
 	}
 	for desc, tc := range tcs {
@@ -60,7 +63,7 @@ func Test_impl_GetByEmail(t *testing.T) {
 				require.Nil(t, generator.InitSnowflakeGenerators())
 
 				// When:
-				user, err := repo.GetByEmail(tc.givenCtx, tc.givenEmail)
+				product, err := repo.GetProductByID(tc.givenCtx, tc.givenID)
 
 				// Then:
 				if tc.expErr != nil {
@@ -72,8 +75,8 @@ func Test_impl_GetByEmail(t *testing.T) {
 					}
 				} else {
 					require.NoError(t, err)
-					require.NotEmpty(t, user.ID)
-					testutil.Compare(t, tc.expUser, user, model.User{}, "ID", "Password", "CreatedAt", "UpdatedAt")
+					require.NotEmpty(t, product.ID)
+					testutil.Compare(t, tc.expProduct, product, model.Product{}, "CreatedAt", "UpdatedAt")
 				}
 			})
 		})

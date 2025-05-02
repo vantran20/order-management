@@ -56,6 +56,7 @@ api-update-vendor:
 
 api-gen-mocks:
 	${COMPOSE} run --name ${PROJECT_NAME}-mockery-$${CONTAINER_SUFFIX:-local} --rm -w /api --entrypoint '' mockery /bin/sh -c "\
+		mockery --dir internal/ws --all --recursive --inpackage && \
 		mockery --dir internal/authenticate --all --recursive --inpackage && \
 		mockery --dir internal/controller --all --recursive --inpackage && \
 		mockery --dir internal/repository --all --recursive --inpackage"

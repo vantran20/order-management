@@ -1,4 +1,4 @@
-package user
+package inventory
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_impl_GetByID(t *testing.T) {
+func Test_impl_GetOrderByID(t *testing.T) {
 	cancelledCtx, c := context.WithCancel(context.Background())
 	c()
 
@@ -21,20 +21,41 @@ func Test_impl_GetByID(t *testing.T) {
 		testDataPath string
 		givenCtx     context.Context
 		givenID      int64
-		expUser      model.User
+		expOrder     model.Order
 		mockIDErr    error
 		expErr       error
 	}
 
 	tcs := map[string]arg{
 		"success": {
-			testDataPath: "testdata/success_get_user.sql",
+			testDataPath: "testdata/success_get_data.sql",
 			givenCtx:     context.Background(),
-			givenID:      14753001,
-			expUser: model.User{
-				Name:   "Test User",
-				Email:  "test@example.com",
-				Status: model.UserStatusActive,
+			givenID:      14753010,
+			expOrder: model.Order{
+				ID:        14753010,
+				UserID:    14753001,
+				Status:    model.OrderStatusPending,
+				TotalCost: 20,
+				OrderItems: []model.OrderItem{
+					{
+						ID:        14753001,
+						OrderID:   14753010,
+						ProductID: 14753010,
+						Quantity:  20,
+						Price:     2000,
+					},
+				},
+			},
+		},
+		"success_with_empty_items": {
+			testDataPath: "testdata/success_get_data.sql",
+			givenCtx:     context.Background(),
+			givenID:      14753011,
+			expOrder: model.Order{
+				ID:        14753011,
+				UserID:    14753001,
+				Status:    model.OrderStatusPending,
+				TotalCost: 10,
 			},
 		},
 		"ctx_cancelled": {
@@ -42,10 +63,10 @@ func Test_impl_GetByID(t *testing.T) {
 			givenID:  14753001,
 			expErr:   context.Canceled,
 		},
-		"user_not_found": {
+		"order_not_found": {
 			givenCtx: context.Background(),
 			givenID:  147530012,
-			expErr:   ErrNotFound,
+			expErr:   ErrOrderNotFound,
 		},
 	}
 	for desc, tc := range tcs {
@@ -60,7 +81,7 @@ func Test_impl_GetByID(t *testing.T) {
 				require.Nil(t, generator.InitSnowflakeGenerators())
 
 				// When:
-				user, err := repo.GetByID(tc.givenCtx, tc.givenID)
+				order, err := repo.GetOrderByID(tc.givenCtx, tc.givenID)
 
 				// Then:
 				if tc.expErr != nil {
@@ -72,8 +93,8 @@ func Test_impl_GetByID(t *testing.T) {
 					}
 				} else {
 					require.NoError(t, err)
-					require.NotEmpty(t, user.ID)
-					testutil.Compare(t, tc.expUser, user, model.User{}, "ID", "Password", "CreatedAt", "UpdatedAt")
+					require.NotEmpty(t, order.ID)
+					testutil.Compare(t, tc.expOrder, order, model.Order{}, "CreatedAt", "UpdatedAt")
 				}
 			})
 		})

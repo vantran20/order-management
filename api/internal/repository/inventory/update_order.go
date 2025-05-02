@@ -12,6 +12,7 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
+// UpdateOrder updates the order in DB
 func (i impl) UpdateOrder(ctx context.Context, m model.Order) (model.Order, error) {
 	o, err := orm.FindOrder(ctx, i.dbConn, m.ID)
 	if err != nil {

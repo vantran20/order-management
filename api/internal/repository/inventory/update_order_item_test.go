@@ -1,4 +1,4 @@
-package user
+package inventory
 
 import (
 	"context"
@@ -13,39 +13,52 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_impl_GetByID(t *testing.T) {
+func Test_impl_UpdateOrderItem(t *testing.T) {
 	cancelledCtx, c := context.WithCancel(context.Background())
 	c()
 
 	type arg struct {
-		testDataPath string
-		givenCtx     context.Context
-		givenID      int64
-		expUser      model.User
-		mockIDErr    error
-		expErr       error
+		testDataPath   string
+		givenCtx       context.Context
+		givenOrderItem model.OrderItem
+		mockIDErr      error
+		expErr         error
 	}
 
 	tcs := map[string]arg{
 		"success": {
-			testDataPath: "testdata/success_get_user.sql",
+			testDataPath: "testdata/success_get_data.sql",
 			givenCtx:     context.Background(),
-			givenID:      14753001,
-			expUser: model.User{
-				Name:   "Test User",
-				Email:  "test@example.com",
-				Status: model.UserStatusActive,
+			givenOrderItem: model.OrderItem{
+				ID:        14753001,
+				OrderID:   14753010,
+				ProductID: 14753010,
+				Quantity:  30,
+				Price:     60000,
 			},
 		},
 		"ctx_cancelled": {
 			givenCtx: cancelledCtx,
-			givenID:  14753001,
-			expErr:   context.Canceled,
+			givenOrderItem: model.OrderItem{
+				ID:        14753001,
+				OrderID:   14753010,
+				ProductID: 14753010,
+				Quantity:  30,
+				Price:     60000,
+			},
+			expErr: context.Canceled,
 		},
-		"user_not_found": {
-			givenCtx: context.Background(),
-			givenID:  147530012,
-			expErr:   ErrNotFound,
+		"not_found": {
+			testDataPath: "testdata/success_get_data.sql",
+			givenCtx:     context.Background(),
+			givenOrderItem: model.OrderItem{
+				ID:        14753012,
+				OrderID:   14753010,
+				ProductID: 14753010,
+				Quantity:  30,
+				Price:     60000,
+			},
+			expErr: ErrOrderItemNotFound,
 		},
 	}
 	for desc, tc := range tcs {
@@ -60,7 +73,7 @@ func Test_impl_GetByID(t *testing.T) {
 				require.Nil(t, generator.InitSnowflakeGenerators())
 
 				// When:
-				user, err := repo.GetByID(tc.givenCtx, tc.givenID)
+				orderItemUpdated, err := repo.UpdateOrderItem(tc.givenCtx, tc.givenOrderItem)
 
 				// Then:
 				if tc.expErr != nil {
@@ -72,8 +85,8 @@ func Test_impl_GetByID(t *testing.T) {
 					}
 				} else {
 					require.NoError(t, err)
-					require.NotEmpty(t, user.ID)
-					testutil.Compare(t, tc.expUser, user, model.User{}, "ID", "Password", "CreatedAt", "UpdatedAt")
+
+					testutil.Compare(t, tc.givenOrderItem, orderItemUpdated, model.OrderItem{}, "CreatedAt", "UpdatedAt")
 				}
 			})
 		})

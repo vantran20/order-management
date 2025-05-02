@@ -8,16 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type MiddlewareAuth struct {
-	authService AuthService
-}
-
-func NewAuthMiddleware(authService AuthService) *MiddlewareAuth {
-	return &MiddlewareAuth{
-		authService: authService,
-	}
-}
-
 func (m *MiddlewareAuth) Handler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
@@ -52,31 +42,4 @@ func (m *MiddlewareAuth) Handler() gin.HandlerFunc {
 		c.Set("email", claims.Email)
 		c.Next()
 	}
-}
-
-// RateLimiter middleware limits request frequency
-func RateLimiter() gin.HandlerFunc {
-	// In a real application, you would use a proper rate limiting library
-	// This is a simplified example
-	return func(c *gin.Context) {
-		// Get client IP
-		clientIP := c.ClientIP()
-
-		// Check if rate limit exceeded (implementation omitted)
-		if isRateLimitExceeded(clientIP) {
-			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
-				"error": "Rate limit exceeded. Try again later.",
-			})
-			return
-		}
-
-		c.Next()
-	}
-}
-
-// Helper function for rate limiting
-func isRateLimitExceeded(clientIP string) bool {
-	// In a real app, you would implement proper rate limiting
-	// using Redis or another store to track requests
-	return false
 }

@@ -12,10 +12,6 @@ import (
 
 func (h *Handler) Delete(c *gin.Context) {
 	id := c.Param("id")
-	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "user ID is required"})
-		return
-	}
 
 	userID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {

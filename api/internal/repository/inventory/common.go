@@ -23,6 +23,7 @@ func toOrder(o *orm.Order) model.Order {
 		ID:        o.ID,
 		UserID:    o.UserID,
 		TotalCost: o.TotalCost,
+		Status:    model.OrderStatus(o.Status),
 	}
 
 	if o.R != nil && o.R.OrderItems != nil && len(o.R.OrderItems) > 0 {

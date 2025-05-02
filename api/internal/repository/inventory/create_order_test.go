@@ -1,7 +1,8 @@
-package user
+package inventory
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"omg/api/internal/model"
@@ -13,39 +14,48 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_impl_GetByEmail(t *testing.T) {
+func Test_impl_CreateOrder(t *testing.T) {
 	cancelledCtx, c := context.WithCancel(context.Background())
 	c()
 
 	type arg struct {
 		testDataPath string
 		givenCtx     context.Context
-		givenEmail   string
-		expUser      model.User
+		givenOrder   model.Order
 		mockIDErr    error
 		expErr       error
 	}
 
 	tcs := map[string]arg{
 		"success": {
-			testDataPath: "testdata/success_get_user.sql",
+			testDataPath: "testdata/success.sql",
 			givenCtx:     context.Background(),
-			givenEmail:   "test@example.com",
-			expUser: model.User{
-				Name:   "Test User",
-				Email:  "test@example.com",
-				Status: model.UserStatusActive,
+			givenOrder: model.Order{
+				UserID:    14753001,
+				Status:    model.OrderStatusPending,
+				TotalCost: 10,
 			},
 		},
 		"ctx_cancelled": {
-			givenCtx:   cancelledCtx,
-			givenEmail: "test@example.com",
-			expErr:     context.Canceled,
+			testDataPath: "testdata/success.sql",
+			givenCtx:     cancelledCtx,
+			givenOrder: model.Order{
+				UserID:    14753001,
+				Status:    model.OrderStatusPending,
+				TotalCost: 10,
+			},
+			expErr: context.Canceled,
 		},
 		"user_not_found": {
-			givenCtx:   context.Background(),
-			givenEmail: "abc@example.com",
-			expErr:     ErrNotFound,
+			testDataPath: "testdata/success.sql",
+			givenCtx:     context.Background(),
+			givenOrder: model.Order{
+				ID:        14753010,
+				UserID:    14753011,
+				Status:    model.OrderStatusPending,
+				TotalCost: 10,
+			},
+			expErr: errors.New("foreign key constraint"),
 		},
 	}
 	for desc, tc := range tcs {
@@ -55,25 +65,25 @@ func Test_impl_GetByEmail(t *testing.T) {
 				if tc.testDataPath != "" {
 					testutil.LoadTestSQLFile(t, dbConn, tc.testDataPath)
 				}
-
 				repo := New(dbConn)
 				require.Nil(t, generator.InitSnowflakeGenerators())
 
 				// When:
-				user, err := repo.GetByEmail(tc.givenCtx, tc.givenEmail)
+				createdOrder, err := repo.CreateOrder(tc.givenCtx, tc.givenOrder)
 
 				// Then:
 				if tc.expErr != nil {
 					require.Error(t, err)
-					if desc == "duplicate_email" {
+					if desc == "user_not_found" {
+						// For database constraint errors, just check that the error contains the expected substring
 						require.Contains(t, err.Error(), tc.expErr.Error())
 					} else {
 						require.Equal(t, tc.expErr, pkgerrors.Cause(err))
 					}
 				} else {
 					require.NoError(t, err)
-					require.NotEmpty(t, user.ID)
-					testutil.Compare(t, tc.expUser, user, model.User{}, "ID", "Password", "CreatedAt", "UpdatedAt")
+					require.NotEmpty(t, createdOrder.ID)
+					testutil.Compare(t, tc.givenOrder, createdOrder, model.Order{}, "ID", "CreatedAt", "UpdatedAt")
 				}
 			})
 		})

@@ -4,27 +4,9 @@ import (
 	"encoding/json"
 	"log"
 	"strconv"
-	"sync"
 )
 
-type Hub struct {
-	clients    map[*Client]bool
-	Broadcast  chan []byte
-	register   chan *Client
-	unregister chan *Client
-	mu         sync.RWMutex
-}
-
-func NewHub() *Hub {
-	return &Hub{
-		clients:    make(map[*Client]bool),
-		Broadcast:  make(chan []byte),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
-	}
-}
-
-func (h *Hub) Run() {
+func (h *implHub) Run() {
 	log.Printf("Starting WebSocket hub")
 
 	for {
@@ -95,4 +77,16 @@ func parseOrderStatusMessage(data []byte) (*OrderStatusMessage, error) {
 		return nil, err
 	}
 	return &msg, nil
+}
+
+func (h *implHub) BroadcastMessage(message []byte) {
+	h.Broadcast <- message
+}
+
+func (h *implHub) Register(client *Client) {
+	h.register <- client
+}
+
+func (h *implHub) Unregister(client *Client) {
+	h.unregister <- client
 }

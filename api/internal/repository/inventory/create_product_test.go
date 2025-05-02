@@ -1,4 +1,4 @@
-package user
+package inventory
 
 import (
 	"context"
@@ -14,14 +14,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestImpl_CreateUser(t *testing.T) {
+func Test_impl_CreateProduct(t *testing.T) {
 	cancelledCtx, c := context.WithCancel(context.Background())
 	c()
 
 	type arg struct {
 		testDataPath string
 		givenCtx     context.Context
-		givenUser    model.User
+		givenProduct model.Product
 		mockIDErr    error
 		expErr       error
 	}
@@ -29,34 +29,36 @@ func TestImpl_CreateUser(t *testing.T) {
 	tcs := map[string]arg{
 		"success": {
 			givenCtx: context.Background(),
-			givenUser: model.User{
-				Name:     "Test User",
-				Email:    "test@example.com",
-				Password: "password123",
-				Status:   model.UserStatusActive,
+			givenProduct: model.Product{
+				Name:        "TestProduct",
+				Description: "TestProduct",
+				Price:       2500,
+				Stock:       5,
+				Status:      model.ProductStatusActive,
 			},
 		},
 		"ctx_cancelled": {
 			givenCtx: cancelledCtx,
-			givenUser: model.User{
-				Name:     "Test User",
-				Email:    "test@example.com",
-				Password: "password123",
-				Status:   model.UserStatusActive,
+			givenProduct: model.Product{
+				Name:        "TestProduct",
+				Description: "TestProduct",
+				Price:       2500,
+				Stock:       5,
+				Status:      model.ProductStatusActive,
 			},
 			expErr: context.Canceled,
 		},
-		"duplicate_email": {
-			testDataPath: "testdata/success_get_user.sql",
+		"product_constraint": {
+			testDataPath: "testdata/success.sql",
 			givenCtx:     context.Background(),
-			givenUser: model.User{
-				ID:       14753001,
-				Name:     "Test User",
-				Email:    "test@example.com",
-				Password: "password123",
-				Status:   model.UserStatusActive,
+			givenProduct: model.Product{
+				Name:        "",
+				Description: "",
+				Price:       2500,
+				Stock:       5,
+				Status:      model.ProductStatusActive,
 			},
-			expErr: errors.New("pq: duplicate key value violates unique constraint"),
+			expErr: errors.New("orm: unable to insert into products: pq: new row for relation \"products\" violates check constraint \"products_description_check\""),
 		},
 	}
 	for desc, tc := range tcs {
@@ -66,25 +68,26 @@ func TestImpl_CreateUser(t *testing.T) {
 				if tc.testDataPath != "" {
 					testutil.LoadTestSQLFile(t, dbConn, tc.testDataPath)
 				}
+
 				repo := New(dbConn)
 				require.Nil(t, generator.InitSnowflakeGenerators())
 
 				// When:
-				createdUser, err := repo.CreateUser(tc.givenCtx, tc.givenUser)
+				createProduct, err := repo.CreateProduct(tc.givenCtx, tc.givenProduct)
 
 				// Then:
 				if tc.expErr != nil {
 					require.Error(t, err)
-					if desc == "duplicate_email" {
+					if desc == "product_constraint" {
+						// For database constraint errors, just check that the error contains the expected substring
 						require.Contains(t, err.Error(), tc.expErr.Error())
 					} else {
 						require.Equal(t, tc.expErr, pkgerrors.Cause(err))
 					}
-					require.Equal(t, model.User{}, createdUser)
 				} else {
 					require.NoError(t, err)
-					require.NotEmpty(t, createdUser.ID)
-					testutil.Compare(t, tc.givenUser, createdUser, model.User{}, "ID", "CreatedAt", "UpdatedAt")
+					require.NotEmpty(t, createProduct.ID)
+					testutil.Compare(t, tc.givenProduct, createProduct, model.Product{}, "ID", "CreatedAt", "UpdatedAt")
 				}
 			})
 		})
