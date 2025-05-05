@@ -13,8 +13,8 @@ import (
 	"omg/api/pkg/testutil"
 
 	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHandler_Register(t *testing.T) {
@@ -176,8 +176,79 @@ func TestHandler_Register(t *testing.T) {
 			router.ServeHTTP(w, req)
 
 			// Assertions
-			assert.Equal(t, tc.expectedStatus, w.Code)
-			assert.JSONEq(t, testutil.ToJSONString(tc.expectedBody), w.Body.String())
+			require.Equal(t, tc.expectedStatus, w.Code)
+			require.JSONEq(t, testutil.ToJSONString(tc.expectedBody), w.Body.String())
+		})
+	}
+}
+
+func Test_validateAndMapRegisterRequest(t *testing.T) {
+	tcs := map[string]struct {
+		input    registerRequest
+		expected model.CreateUserInput
+		err      error
+	}{
+		"valid_request": {
+			input: registerRequest{
+				Name:     "Test User",
+				Email:    "test@example.com",
+				Password: "password123",
+			},
+			expected: model.CreateUserInput{
+				Name:     "Test User",
+				Email:    "test@example.com",
+				Password: "password123",
+			},
+			err: nil,
+		},
+		"empty_user_name": {
+			input: registerRequest{
+				Name:     "",
+				Email:    "test@example.com",
+				Password: "password123",
+			},
+			expected: model.CreateUserInput{},
+			err:      errors.New("user name is required"),
+		},
+		"empty_user_email": {
+			input: registerRequest{
+				Name:     "Test User",
+				Email:    "",
+				Password: "password123",
+			},
+			expected: model.CreateUserInput{},
+			err:      errors.New("user email is required"),
+		},
+		"empty_user_pwd": {
+			input: registerRequest{
+				Name:     "Test User",
+				Email:    "test@example.com",
+				Password: "",
+			},
+			expected: model.CreateUserInput{},
+			err:      errors.New("user password is required"),
+		},
+		"invalid_user_email": {
+			input: registerRequest{
+				Name:     "Test User",
+				Email:    "invalidtestexample.com",
+				Password: "password123",
+			},
+			expected: model.CreateUserInput{},
+			err:      errors.New("invalid email format"),
+		},
+	}
+
+	for desc, tc := range tcs {
+		t.Run(desc, func(t *testing.T) {
+			output, err := validateAndMapRegisterRequest(tc.input)
+			if tc.err != nil {
+				require.Error(t, err)
+				require.Equal(t, tc.err.Error(), err.Error())
+			} else {
+				require.NoError(t, err)
+			}
+			require.Equal(t, tc.expected, output)
 		})
 	}
 }

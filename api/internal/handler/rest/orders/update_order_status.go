@@ -16,8 +16,25 @@ type updateOrderRequest struct {
 	Status string `json:"status"`
 }
 
-// UpdateProduct handles product updating
-func (h *Handler) UpdateProduct(c *gin.Context) {
+type updateOrderResponse struct {
+	ID        string                    `json:"id"`
+	UserID    string                    `json:"user_id"`
+	TotalCost string                    `json:"total_cost"`
+	Status    string                    `json:"status"`
+	Items     []updateOrderItemResponse `json:"items"`
+}
+
+type updateOrderItemResponse struct {
+	ID        string `json:"id"`
+	OrderId   string `json:"order_id"`
+	ProductID string `json:"product_id"`
+	Quantity  string `json:"quantity"`
+	Price     string `json:"price"`
+}
+
+// UpdateOrderStatus handles order updating status
+func (h *Handler) UpdateOrderStatus(c *gin.Context) {
+
 	var req updateOrderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -25,14 +42,13 @@ func (h *Handler) UpdateProduct(c *gin.Context) {
 	}
 
 	id := c.Param("id")
-	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "user ID is required"})
-		return
-	}
-
 	orderID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if orderID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "user_id required"})
 		return
 	}
 
@@ -40,7 +56,11 @@ func (h *Handler) UpdateProduct(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, orders.ErrOrderNotFound):
-			c.JSON(http.StatusConflict, gin.H{"error": "order not found"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "order not found"})
+		case errors.Is(err, orders.ErrProductNotFound):
+			c.JSON(http.StatusBadRequest, gin.H{"error": "product not found"})
+		case errors.Is(err, orders.ErrProductOutOfStock):
+			c.JSON(http.StatusBadRequest, gin.H{"error": "product out of stock"})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		}
@@ -53,5 +73,21 @@ func (h *Handler) UpdateProduct(c *gin.Context) {
 		h.wsHub.BroadcastMessage(msgBytes)
 	}
 
-	c.JSON(http.StatusCreated, "Successfully updated order status")
+	resp := updateOrderResponse{
+		ID:        strconv.FormatInt(order.ID, 10),
+		UserID:    strconv.FormatInt(order.UserID, 10),
+		TotalCost: strconv.FormatFloat(order.TotalCost, 'f', -1, 64),
+		Status:    order.Status.String(),
+	}
+
+	for _, item := range order.OrderItems {
+		resp.Items = append(resp.Items, updateOrderItemResponse{
+			ID:        strconv.FormatInt(item.ID, 10),
+			OrderId:   strconv.FormatInt(item.OrderID, 10),
+			ProductID: strconv.FormatInt(item.ProductID, 10),
+			Quantity:  strconv.FormatInt(item.Quantity, 10),
+			Price:     strconv.FormatFloat(item.Price, 'f', -1, 64),
+		})
+	}
+	c.JSON(http.StatusCreated, resp)
 }

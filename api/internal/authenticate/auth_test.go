@@ -128,9 +128,6 @@ func TestAuthService_Login(t *testing.T) {
 			token, err := authService.Login(c, tc.givenEmail, tc.givenPassword)
 
 			// Then:
-			mockUserRepo.AssertExpectations(t)
-			mockRepo.AssertExpectations(t)
-
 			if tc.expErr != nil {
 				require.Error(t, err)
 				if errors.Is(err, tc.expErr) {

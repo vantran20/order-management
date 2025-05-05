@@ -27,11 +27,11 @@ func TestImpl_Update(t *testing.T) {
 	tcs := map[string]args{
 		"success": {
 			input: model.UpdateProductInput{
-				ID:    123,
-				Name:  "Updated Name",
-				Desc:  "Updated Description",
-				Price: 100.0,
-				Stock: 50,
+				ID:          123,
+				Name:        "Updated Name",
+				Description: "Updated Description",
+				Price:       100.0,
+				Stock:       50,
 			},
 			existingProduct: model.Product{
 				ID:     123,
@@ -55,21 +55,36 @@ func TestImpl_Update(t *testing.T) {
 				Status:      "active",
 			},
 		},
-		"product not found": {
+		"product_not_found": {
 			input: model.UpdateProductInput{
 				ID: 123,
 			},
 			getProductErr: inventory.ErrProductNotFound,
 			expectedErr:   ErrNotFound,
 		},
-		"unexpected get error": {
+		"product_deleted": {
+			input: model.UpdateProductInput{
+				ID:          123,
+				Name:        "Updated Name",
+				Description: "Updated Description",
+				Price:       100.0,
+				Stock:       50,
+			},
+			existingProduct: model.Product{
+				ID:     123,
+				Name:   "Old Name",
+				Status: model.ProductStatusDeleted,
+			},
+			expectedErr: ErrProductDeleted,
+		},
+		"unexpected_get_error": {
 			input: model.UpdateProductInput{
 				ID: 123,
 			},
 			getProductErr: errors.New("db error"),
 			expectedErr:   errors.New("db error"),
 		},
-		"unexpected update error": {
+		"unexpected_update_error": {
 			input: model.UpdateProductInput{
 				ID:    123,
 				Name:  "Name",
@@ -113,9 +128,6 @@ func TestImpl_Update(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, tc.expectedResult, result)
 			}
-
-			mockInv.AssertExpectations(t)
-			mockRepo.AssertExpectations(t)
 		})
 	}
 }

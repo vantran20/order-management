@@ -42,7 +42,7 @@ func (h *Handler) GetUserByEmail(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, users.ErrUserNotFound):
-			c.JSON(http.StatusConflict, gin.H{"error": "user not found"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "user not found"})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		}

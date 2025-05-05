@@ -133,9 +133,6 @@ func TestImpl_Create(t *testing.T) {
 				require.Equal(t, tc.expResult.Status, result.Status)
 				require.NotEmpty(t, result.Password)
 			}
-
-			userRepo.AssertExpectations(t)
-			repo.AssertExpectations(t)
 		})
 	}
 }

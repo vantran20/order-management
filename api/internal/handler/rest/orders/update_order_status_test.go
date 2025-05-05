@@ -17,50 +17,37 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestHandler_Create(t *testing.T) {
+func TestHandler_UpdateOrderStatus(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	type mockOrderCtrl struct {
 		wantCall bool
-		input    model.CreateOrderInput
+		id       int64
+		status   model.OrderStatus
 		output   model.Order
 		err      error
 	}
 	tests := map[string]struct {
-		requestBody     createOrderRequest
+		givenID         string
+		requestBody     updateOrderRequest
 		mockOrderCtrl   mockOrderCtrl
 		expStatus       int
 		expResponse     map[string]interface{}
 		shouldBroadcast bool
 	}{
-		"successful order creation": {
-			requestBody: createOrderRequest{
-				UserID: "1",
-				Items: []struct {
-					ProductID string `json:"product_id"`
-					Quantity  string `json:"quantity"`
-				}{
-					{
-						ProductID: "1",
-						Quantity:  "2",
-					},
-				},
+		"successful_update_order_status": {
+			givenID: "1",
+			requestBody: updateOrderRequest{
+				Status: model.OrderStatusPaid.String(),
 			},
 			mockOrderCtrl: mockOrderCtrl{
 				wantCall: true,
-				input: model.CreateOrderInput{
-					UserID: 1,
-					Items: []model.CreateOrderItemInput{
-						{
-							ProductID: 1,
-							Quantity:  2,
-						},
-					},
-				},
+				id:       1,
+				status:   model.OrderStatusPaid,
 				output: model.Order{
 					ID:        1,
 					UserID:    1,
-					Status:    model.OrderStatusPending,
+					Status:    model.OrderStatusPaid,
 					TotalCost: 100.0,
 					OrderItems: []model.OrderItem{
 						{
@@ -79,7 +66,7 @@ func TestHandler_Create(t *testing.T) {
 				"id":         "1",
 				"user_id":    "1",
 				"total_cost": "100",
-				"status":     "PENDING",
+				"status":     "PAID",
 				"items": []interface{}{
 					map[string]interface{}{
 						"id":         "1",
@@ -93,17 +80,9 @@ func TestHandler_Create(t *testing.T) {
 			shouldBroadcast: true,
 		},
 		"invalid user_id": {
-			requestBody: createOrderRequest{
-				UserID: "invalid",
-				Items: []struct {
-					ProductID string `json:"product_id"`
-					Quantity  string `json:"quantity"`
-				}{
-					{
-						ProductID: "1",
-						Quantity:  "2",
-					},
-				},
+			givenID: "invalid",
+			requestBody: updateOrderRequest{
+				Status: model.OrderStatusPaid.String(),
 			},
 			expStatus: http.StatusBadRequest,
 			expResponse: map[string]interface{}{
@@ -111,48 +90,22 @@ func TestHandler_Create(t *testing.T) {
 			},
 		},
 		"missing user_id": {
-			requestBody: createOrderRequest{
-				UserID: "0",
-				Items: []struct {
-					ProductID string `json:"product_id"`
-					Quantity  string `json:"quantity"`
-				}{
-					{
-						ProductID: "1",
-						Quantity:  "2",
-					},
-				},
-			},
+			givenID:   "0",
 			expStatus: http.StatusBadRequest,
 			expResponse: map[string]interface{}{
 				"error": "user_id required",
 			},
 		},
 		"product not found": {
-			requestBody: createOrderRequest{
-				UserID: "1",
-				Items: []struct {
-					ProductID string `json:"product_id"`
-					Quantity  string `json:"quantity"`
-				}{
-					{
-						ProductID: "1",
-						Quantity:  "2",
-					},
-				},
+			givenID: "1",
+			requestBody: updateOrderRequest{
+				Status: model.OrderStatusPaid.String(),
 			},
 			mockOrderCtrl: mockOrderCtrl{
 				wantCall: true,
-				input: model.CreateOrderInput{
-					UserID: 1,
-					Items: []model.CreateOrderItemInput{
-						{
-							ProductID: 1,
-							Quantity:  2,
-						},
-					},
-				},
-				err: orders.ErrProductNotFound,
+				id:       1,
+				status:   model.OrderStatusPaid,
+				err:      orders.ErrProductNotFound,
 			},
 			expStatus: http.StatusBadRequest,
 			expResponse: map[string]interface{}{
@@ -160,30 +113,15 @@ func TestHandler_Create(t *testing.T) {
 			},
 		},
 		"product out of stock": {
-			requestBody: createOrderRequest{
-				UserID: "1",
-				Items: []struct {
-					ProductID string `json:"product_id"`
-					Quantity  string `json:"quantity"`
-				}{
-					{
-						ProductID: "1",
-						Quantity:  "2",
-					},
-				},
+			givenID: "1",
+			requestBody: updateOrderRequest{
+				Status: model.OrderStatusPaid.String(),
 			},
 			mockOrderCtrl: mockOrderCtrl{
 				wantCall: true,
-				input: model.CreateOrderInput{
-					UserID: 1,
-					Items: []model.CreateOrderItemInput{
-						{
-							ProductID: 1,
-							Quantity:  2,
-						},
-					},
-				},
-				err: orders.ErrProductOutOfStock,
+				id:       1,
+				status:   model.OrderStatusPaid,
+				err:      orders.ErrProductOutOfStock,
 			},
 			expStatus: http.StatusBadRequest,
 			expResponse: map[string]interface{}{
@@ -191,30 +129,15 @@ func TestHandler_Create(t *testing.T) {
 			},
 		},
 		"internal server error": {
-			requestBody: createOrderRequest{
-				UserID: "1",
-				Items: []struct {
-					ProductID string `json:"product_id"`
-					Quantity  string `json:"quantity"`
-				}{
-					{
-						ProductID: "1",
-						Quantity:  "2",
-					},
-				},
+			givenID: "1",
+			requestBody: updateOrderRequest{
+				Status: model.OrderStatusPaid.String(),
 			},
 			mockOrderCtrl: mockOrderCtrl{
 				wantCall: true,
-				input: model.CreateOrderInput{
-					UserID: 1,
-					Items: []model.CreateOrderItemInput{
-						{
-							ProductID: 1,
-							Quantity:  2,
-						},
-					},
-				},
-				err: errors.New("unexpected error"),
+				id:       1,
+				status:   model.OrderStatusPaid,
+				err:      errors.New("unexpected error"),
 			},
 			expStatus: http.StatusInternalServerError,
 			expResponse: map[string]interface{}{
@@ -227,19 +150,20 @@ func TestHandler_Create(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			// Create mocks
 			mockCtrl := orders.NewMockController(t)
+			mockHub := ws.NewMockHub(t)
+			handler := NewHandler(mockCtrl, mockHub)
+
+			// Create a test router
+			router := gin.New()
+			router.PUT("/authenticated/orders/update/:id", handler.UpdateOrderStatus)
+
 			if tc.mockOrderCtrl.wantCall {
-				mockCtrl.On("CreateOrder", mock.Anything, tc.mockOrderCtrl.input).Return(tc.mockOrderCtrl.output, tc.mockOrderCtrl.err)
+				mockCtrl.On("UpdateOrderStatus", mock.Anything, tc.mockOrderCtrl.id, tc.mockOrderCtrl.status).Return(tc.mockOrderCtrl.output, tc.mockOrderCtrl.err)
 			}
 
-			// Set up handler
-			h := Handler{
-				controller: mockCtrl,
-			}
 			if tc.shouldBroadcast {
 				// Create a mock hub without starting its goroutine
-				mockHub := ws.NewMockHub(t)
 				mockHub.On("BroadcastMessage", mock.Anything).Return()
-				h.wsHub = mockHub
 			}
 
 			// Create request body
@@ -248,12 +172,9 @@ func TestHandler_Create(t *testing.T) {
 
 			// Create test request
 			w := httptest.NewRecorder()
-			c, _ := gin.CreateTestContext(w)
-			c.Request = httptest.NewRequest(http.MethodPost, "/orders", bytes.NewBuffer(body))
-			c.Request.Header.Set("Content-Type", "application/json")
-
-			// Execute request
-			h.Create(c)
+			req, _ := http.NewRequest("PUT", "/authenticated/orders/update/"+tc.givenID, bytes.NewBuffer(body))
+			req.Header.Set("Content-Type", "application/json")
+			router.ServeHTTP(w, req)
 
 			// Verify response
 			require.Equal(t, tc.expStatus, w.Code)

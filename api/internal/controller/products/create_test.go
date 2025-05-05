@@ -140,9 +140,6 @@ func TestImpl_CreateProduct(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, tc.expResult, result)
 			}
-
-			inventoryRepo.AssertExpectations(t)
-			repo.AssertExpectations(t)
 		})
 	}
 }

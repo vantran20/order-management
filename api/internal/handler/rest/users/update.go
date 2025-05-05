@@ -74,6 +74,10 @@ func validateAndMapRequest(req updateUserRequest) (model.UpdateUserInput, error)
 		return model.UpdateUserInput{}, errors.New("user email is required")
 	}
 
+	if !emailRegex.MatchString(req.Email) {
+		return model.UpdateUserInput{}, errors.New("invalid email format")
+	}
+
 	if req.Status == "" {
 		return model.UpdateUserInput{}, errors.New("user status is required")
 	}

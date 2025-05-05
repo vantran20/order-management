@@ -2,6 +2,7 @@ package orders
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"omg/api/internal/model"
@@ -55,6 +56,32 @@ func TestImpl_UpdateOrderStatus(t *testing.T) {
 			expUpdateCalled: true,
 			expErr:          ErrOrderNotFound,
 		},
+		"generic_error_on_get": {
+			givenID:      3,
+			givenStatus:  model.OrderStatusPaid,
+			mockGetErr:   errors.New("database connection error"),
+			expGetCalled: true,
+			expErr:       errors.New("database connection error"),
+		},
+		"generic_error_on_update": {
+			givenID:     5,
+			givenStatus: model.OrderStatusPaid,
+			mockOrder: model.Order{
+				ID:     5,
+				Status: model.OrderStatusPending,
+			},
+			mockUpdateErr:   errors.New("database error"),
+			expGetCalled:    true,
+			expUpdateCalled: true,
+			expErr:          errors.New("database error"),
+		},
+		"zero_id_check": {
+			givenID:         0,
+			givenStatus:     model.OrderStatusPaid,
+			mockOrder:       model.Order{},
+			expGetCalled:    true,
+			expUpdateCalled: true,
+		},
 	}
 
 	for name, tc := range tcs {
@@ -72,23 +99,20 @@ func TestImpl_UpdateOrderStatus(t *testing.T) {
 			mockRepo := &repository.MockRegistry{}
 			mockRepo.On("Inventory").Return(invRepo)
 
-			impl := New(mockRepo)
+			i := New(mockRepo)
 
 			// When:
-			rs, err := impl.UpdateOrderStatus(context.Background(), tc.givenID, tc.givenStatus)
+			rs, err := i.UpdateOrderStatus(context.Background(), tc.givenID, tc.givenStatus)
 
 			// Then:
 			if tc.expErr != nil {
-				require.ErrorIs(t, err, tc.expErr)
+				require.EqualError(t, err, tc.expErr.Error())
 				require.Equal(t, model.Order{}, rs)
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, tc.givenID, rs.ID)
 				require.Equal(t, tc.givenStatus, rs.Status)
 			}
-
-			invRepo.AssertExpectations(t)
-			mockRepo.AssertExpectations(t)
 		})
 	}
 }

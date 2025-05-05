@@ -50,10 +50,10 @@ type CreateProductInput struct {
 
 // UpdateProductInput holds input params for updating the product
 type UpdateProductInput struct {
-	ID     int64
-	Name   string
-	Desc   string
-	Price  float64
-	Stock  int64
-	Status ProductStatus
+	ID          int64
+	Name        string
+	Description string
+	Price       float64
+	Stock       int64
+	Status      ProductStatus
 }

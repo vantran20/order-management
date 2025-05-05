@@ -59,6 +59,8 @@ Requirements
 
 Useful commands:
 
+•	`make api-gen-mocks`:       Generate mock files by mockery
+
 •	`make api-update-vendor`:   Download and clean up unused dependencies
 
 •	`make teardown`:            Stop containers
@@ -88,7 +90,7 @@ Useful commands:
 
 •	POST   /authenticated/products/create – Create product
 
-•	POST   /authenticated/products/update – Update product
+•	PUT   /authenticated/products/update – Update product
 
 •	POST   /authenticated/products/delete – Soft delete product
 
@@ -98,7 +100,7 @@ Useful commands:
 
 •	POST   /authenticated/order/create – Create order
 
-•	POST   /authenticated/order/update/:id – Update order
+•	PUT   /authenticated/order/update/:id – Update order
 
 
 ## WebSocket:

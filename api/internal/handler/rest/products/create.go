@@ -7,6 +7,7 @@ import (
 
 	"omg/api/internal/controller/products"
 	"omg/api/internal/model"
+	"omg/api/pkg/floatutil"
 
 	"github.com/gin-gonic/gin"
 )
@@ -58,7 +59,7 @@ func (h *Handler) Create(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, products.ErrProductAlreadyExists):
-			c.JSON(http.StatusConflict, gin.H{"error": "product already exists"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "product already exists"})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		}
@@ -69,8 +70,8 @@ func (h *Handler) Create(c *gin.Context) {
 		ID:          strconv.FormatInt(p.ID, 10),
 		Name:        p.Name,
 		Description: p.Description,
-		Price:       strconv.FormatFloat(p.Price, 'f', 2, 64),
-		Stock:       strconv.FormatInt(stock, 10),
+		Price:       floatutil.FormatFloat(p.Price),
+		Stock:       strconv.FormatInt(p.Stock, 10),
 		Status:      p.Status.String(),
 	})
 }

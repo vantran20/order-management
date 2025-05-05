@@ -11,8 +11,8 @@ import (
 	"omg/api/pkg/testutil"
 
 	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHandler_List(t *testing.T) {
@@ -106,8 +106,8 @@ func TestHandler_List(t *testing.T) {
 			router.ServeHTTP(w, req)
 
 			// Assertions
-			assert.Equal(t, tc.expectedStatus, w.Code)
-			assert.JSONEq(t, testutil.ToJSONString(tc.expectedBody), w.Body.String())
+			require.Equal(t, tc.expectedStatus, w.Code)
+			require.JSONEq(t, testutil.ToJSONString(tc.expectedBody), w.Body.String())
 		})
 	}
 }

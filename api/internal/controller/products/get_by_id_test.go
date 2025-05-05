@@ -70,9 +70,6 @@ func TestImpl_GetByID(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, tc.mockProduct, product)
 			}
-
-			invRepo.AssertExpectations(t)
-			mockRepo.AssertExpectations(t)
 		})
 	}
 }

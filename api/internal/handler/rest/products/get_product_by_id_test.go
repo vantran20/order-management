@@ -1,4 +1,4 @@
-package users
+package products
 
 import (
 	"errors"
@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"omg/api/internal/controller/users"
+	"omg/api/internal/controller/products"
 	"omg/api/internal/model"
 	"omg/api/pkg/testutil"
 
@@ -15,18 +15,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestHandler_GetUserByID(t *testing.T) {
+func TestHandler_GetProductByID(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	type mockGetByIDCtrl struct {
 		wantCall bool
 		id       int64
-		out      model.User
+		out      model.Product
 		err      error
 	}
 
 	type arg struct {
-		userID          string
+		givenID         string
 		mockGetByIDCtrl mockGetByIDCtrl
 		expectedStatus  int
 		expectedBody    interface{}
@@ -34,43 +34,52 @@ func TestHandler_GetUserByID(t *testing.T) {
 
 	tcs := map[string]arg{
 		"successful_retrieval": {
-			userID: "123",
+			givenID: "123",
 			mockGetByIDCtrl: mockGetByIDCtrl{
 				wantCall: true,
 				id:       123,
-				out: model.User{
-					ID:     123,
-					Name:   "Test User",
-					Email:  "test@example.com",
-					Status: model.UserStatusActive,
+				out: model.Product{
+					ID:          123,
+					Name:        "test product",
+					Description: "test description",
+					Price:       2000,
+					Stock:       100,
+					Status:      model.ProductStatusActive,
 				},
 				err: nil,
 			},
 			expectedStatus: http.StatusOK,
-			expectedBody: getUserByIDResponse{
-				ID:     "123",
-				Name:   "Test User",
-				Email:  "test@example.com",
-				Status: model.UserStatusActive.String(),
+			expectedBody: getProductByIDResponse{
+				ID:          "123",
+				Name:        "test product",
+				Description: "test description",
+				Price:       "2000",
+				Stock:       "100",
+				Status:      model.ProductStatusActive.String(),
 			},
 		},
-		"invalid_user_id_format": {
-			userID:         "abc",
+		"invalid_product_id_format": {
+			givenID:        "abc",
 			expectedStatus: http.StatusBadRequest,
-			expectedBody:   gin.H{"error": "invalid user ID format"},
+			expectedBody:   gin.H{"error": "invalid product ID format"},
 		},
-		"user_not_found": {
-			userID: "123",
+		"invalid_product_id": {
+			givenID:        "0",
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   gin.H{"error": "invalid product ID"},
+		},
+		"product_not_found": {
+			givenID: "123",
 			mockGetByIDCtrl: mockGetByIDCtrl{
 				wantCall: true,
 				id:       123,
-				err:      users.ErrUserNotFound,
+				err:      products.ErrNotFound,
 			},
 			expectedStatus: http.StatusNotFound,
-			expectedBody:   gin.H{"error": "user not found"},
+			expectedBody:   gin.H{"error": "product not found"},
 		},
 		"internal_server_error": {
-			userID: "123",
+			givenID: "123",
 			mockGetByIDCtrl: mockGetByIDCtrl{
 				wantCall: true,
 				id:       123,
@@ -84,12 +93,12 @@ func TestHandler_GetUserByID(t *testing.T) {
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			// Setup
-			mockCtrl := users.NewMockController(t)
+			mockCtrl := products.NewMockController(t)
 			handler := New(mockCtrl)
 
 			// Create a test router
 			router := gin.New()
-			router.GET("/authenticated/users/:id", handler.GetUserByID)
+			router.GET("/authenticated/products/:id", handler.GetProductByID)
 
 			// Setup mock expectations
 			if tc.mockGetByIDCtrl.wantCall {
@@ -98,7 +107,7 @@ func TestHandler_GetUserByID(t *testing.T) {
 
 			// Create test request
 			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("GET", "/authenticated/users/"+tc.userID, nil)
+			req, _ := http.NewRequest("GET", "/authenticated/products/"+tc.givenID, nil)
 			router.ServeHTTP(w, req)
 
 			// Assertions

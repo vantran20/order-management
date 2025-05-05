@@ -5,7 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"omg/api/internal/controller/users"
+	"omg/api/internal/controller/products"
+	"omg/api/pkg/floatutil"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,22 +22,23 @@ type getProductByIDResponse struct {
 
 func (h *Handler) GetProductByID(c *gin.Context) {
 	id := c.Param("id")
-	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "user ID is required"})
-		return
-	}
 
 	productID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID format"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid product ID format"})
+		return
+	}
+
+	if productID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid product ID"})
 		return
 	}
 
 	p, err := h.controller.GetByID(c.Request.Context(), productID)
 	if err != nil {
 		switch {
-		case errors.Is(err, users.ErrUserNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		case errors.Is(err, products.ErrNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": "product not found"})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		}
@@ -47,7 +49,7 @@ func (h *Handler) GetProductByID(c *gin.Context) {
 		ID:          strconv.FormatInt(p.ID, 10),
 		Name:        p.Name,
 		Description: p.Description,
-		Price:       strconv.FormatFloat(p.Price, 'f', -1, 64),
+		Price:       floatutil.FormatFloat(p.Price),
 		Stock:       strconv.FormatInt(p.Stock, 10),
 		Status:      p.Status.String(),
 	})

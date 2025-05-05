@@ -68,6 +68,13 @@ func (rtr *Router) setupRoutes(r *gin.Engine) {
 	authenticated := r.Group("/authenticated")
 	authenticated.Use(authenticate.NewAuthMiddleware(rtr.authService).Handler())
 	rtr.authenticated(authenticated)
+
+	// Custom 404 to always return JSON
+	r.NoRoute(func(c *gin.Context) {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "404 not found",
+		})
+	})
 }
 
 func (rtr *Router) public(rg *gin.RouterGroup) {
@@ -94,6 +101,6 @@ func (rtr *Router) authenticated(rg *gin.RouterGroup) {
 
 	orderRouter := rg.Group("/order")
 	orderRouter.POST("/create", rtr.orderRestHandler.Create)
-	orderRouter.PUT("/update/:id", rtr.orderRestHandler.UpdateProduct)
+	orderRouter.PUT("/update/:id", rtr.orderRestHandler.UpdateOrderStatus)
 	orderRouter.GET("/ws", rtr.wsHandler.HandleOrderUpdates)
 }

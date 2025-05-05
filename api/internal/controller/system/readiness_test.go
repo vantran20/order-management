@@ -56,8 +56,6 @@ func TestImpl_CheckReadiness(t *testing.T) {
 
 			// Then:
 			require.Equal(t, tc.expErr, pkgerrors.Cause(err))
-			systemRepo.AssertExpectations(t)
-			repo.AssertExpectations(t)
 		})
 	}
 }

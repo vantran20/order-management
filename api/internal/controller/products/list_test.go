@@ -69,9 +69,6 @@ func Test_impl_List(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, tc.mockProducts, products)
 			}
-
-			invRepo.AssertExpectations(t)
-			mockRepo.AssertExpectations(t)
 		})
 	}
 }

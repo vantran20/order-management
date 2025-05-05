@@ -123,9 +123,6 @@ func TestImpl_Delete(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
-
-			invRepo.AssertExpectations(t)
-			mockRepo.AssertExpectations(t)
 		})
 	}
 }

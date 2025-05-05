@@ -71,6 +71,10 @@ func validateAndMapRegisterRequest(req registerRequest) (model.CreateUserInput, 
 		return model.CreateUserInput{}, errors.New("user password is required")
 	}
 
+	if !emailRegex.MatchString(req.Email) {
+		return model.CreateUserInput{}, errors.New("invalid email format")
+	}
+
 	return model.CreateUserInput{
 		Name:     req.Name,
 		Email:    req.Email,

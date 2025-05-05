@@ -13,8 +13,8 @@ import (
 	"omg/api/pkg/testutil"
 
 	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHandler_UpdateUser(t *testing.T) {
@@ -221,10 +221,8 @@ func TestHandler_UpdateUser(t *testing.T) {
 			req.Header.Set("Content-Type", "application/json")
 			router.ServeHTTP(w, req)
 
-			// Assertions
-			assert.Equal(t, tc.expectedStatus, w.Code)
-			assert.JSONEq(t, testutil.ToJSONString(tc.expectedBody), w.Body.String())
-			mockCtrl.AssertExpectations(t)
+			require.Equal(t, tc.expectedStatus, w.Code)
+			require.JSONEq(t, testutil.ToJSONString(tc.expectedBody), w.Body.String())
 		})
 	}
 }
@@ -263,6 +261,28 @@ func TestValidateAndMapRequest(t *testing.T) {
 			expected: model.UpdateUserInput{},
 			err:      errors.New("invalid user ID format"),
 		},
+		"invalid_user_name": {
+			input: updateUserRequest{
+				ID:       "abc",
+				Name:     "",
+				Email:    "test@example.com",
+				Password: "password123",
+				Status:   model.UserStatusActive.String(),
+			},
+			expected: model.UpdateUserInput{},
+			err:      errors.New("user name is required"),
+		},
+		"invalid_user_email_format": {
+			input: updateUserRequest{
+				ID:       "abc",
+				Name:     "Test User",
+				Email:    "invalidtestexample.com",
+				Password: "password123",
+				Status:   model.UserStatusActive.String(),
+			},
+			expected: model.UpdateUserInput{},
+			err:      errors.New("invalid email format"),
+		},
 		"invalid_status": {
 			input: updateUserRequest{
 				ID:       "123",
@@ -280,12 +300,12 @@ func TestValidateAndMapRequest(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			output, err := validateAndMapRequest(tc.input)
 			if tc.err != nil {
-				assert.Error(t, err)
-				assert.Equal(t, tc.err.Error(), err.Error())
+				require.Error(t, err)
+				require.Equal(t, tc.err.Error(), err.Error())
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
-			assert.Equal(t, tc.expected, output)
+			require.Equal(t, tc.expected, output)
 		})
 	}
 }

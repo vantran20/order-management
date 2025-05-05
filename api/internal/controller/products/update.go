@@ -18,10 +18,14 @@ func (i impl) Update(ctx context.Context, inp model.UpdateProductInput) (model.P
 		return model.Product{}, err
 	}
 
+	if p.Status == model.ProductStatusDeleted {
+		return model.Product{}, ErrProductDeleted
+	}
+
 	productUpToDate, err := i.repo.Inventory().UpdateProduct(ctx, model.Product{
 		ID:          p.ID,
 		Name:        inp.Name,
-		Description: inp.Desc,
+		Description: inp.Description,
 		Price:       inp.Price,
 		Stock:       inp.Stock,
 		Status:      p.Status,

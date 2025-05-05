@@ -88,19 +88,19 @@ func (h *Handler) Create(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, orders.ErrProductNotFound):
-			c.JSON(http.StatusConflict, gin.H{"error": "product not found"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "product not found"})
 		case errors.Is(err, orders.ErrGetProduct):
-			c.JSON(http.StatusConflict, gin.H{"error": "fail to get product"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "fail to get product"})
 		case errors.Is(err, orders.ErrCreateOrder):
-			c.JSON(http.StatusConflict, gin.H{"error": "fail to create order"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "fail to create order"})
 		case errors.Is(err, orders.ErrCreateOrderItem):
-			c.JSON(http.StatusConflict, gin.H{"error": "fail to create order item"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "fail to create order item"})
 		case errors.Is(err, orders.ErrProductOutOfStock):
-			c.JSON(http.StatusConflict, gin.H{"error": "product out of stock"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "product out of stock"})
 		case errors.Is(err, orders.ErrUpdateProduct):
-			c.JSON(http.StatusConflict, gin.H{"error": "fail to update product"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "fail to update product"})
 		case errors.Is(err, orders.ErrCreateOrder):
-			c.JSON(http.StatusConflict, gin.H{"error": "fail to create order"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "fail to create order"})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		}
